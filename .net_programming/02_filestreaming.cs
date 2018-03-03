@@ -1,6 +1,7 @@
 ﻿/*  Лабораторна робота №2 – Файлові потоки
- 1.	Створити два класи(можна взяти з попереднього завдання)
- 3.	Запис/зчитування з викорстанням бінарного файлу (4б) */
+ 1. Створити два класи(можна взяти з попереднього завдання)
+ 2. Запис/зчитування цих об’єктів в/з текстового файлу (3б)
+ 3. Запис/зчитування з викорстанням бінарного файлу (4б) */
 
 using System;
 using System.Collections.Generic;
@@ -18,11 +19,9 @@ namespace FileStreaming
         public string name { get; set; }
         public string surname { get; set; }
 
-        public User(string _name, string _surname)
+        public User()
         {
             userGuid = Guid.NewGuid();
-            name = _name;
-            surname = _surname;
         }
     }
 
@@ -35,13 +34,10 @@ namespace FileStreaming
         public string author { get; set; }
         public string name { get; set; }
 
-        public Book(uint _year, string _name, string _author)
+        public Book()
         {
             bookGuid = Guid.NewGuid();
             userGuid = Guid.Empty; // default value is null
-            year = _year;
-            author = _author;
-            name = _name;
         }
     }
 
@@ -69,33 +65,84 @@ namespace FileStreaming
         }
     }
 
+    public static class XmlSerialization
+    {
+        // Writes the given object instance to an XML file.
+        public static void WriteToXmlFile<T>(string filePath, T objectToWrite, bool append = false) where T : new()
+        {
+            TextWriter writer = null;
+            try
+            {
+                var serializer = new System.Xml.Serialization.XmlSerializer(typeof(T));
+                writer = new StreamWriter(filePath, append);
+                serializer.Serialize(writer, objectToWrite);
+            }
+            finally
+            {
+                if (writer != null)
+                    writer.Close();
+            }
+        }
+
+        // Reads an object instance from an XML file.
+        public static T ReadFromXmlFile<T>(string filePath) where T : new()
+        {
+            TextReader reader = null;
+            try
+            {
+                var serializer = new System.Xml.Serialization.XmlSerializer(typeof(T));
+                reader = new StreamReader(filePath);
+                return (T)serializer.Deserialize(reader);
+            }
+            finally
+            {
+                if (reader != null)
+                    reader.Close();
+            }
+        }
+    }
+
     class Programm
     {
         static void Main()
         {
-            User user = new User("Lena", "Oxford");
+            User user = new User(){ name = "Lena", surname = "Oxford"};
             List<Book> books = new List<Book>
             {
-                new Book(1950, "1984", "George Orwell"),
-                new Book(1998, "A Brief History of Time", "Stephen Hawking"),
-                new Book(2012, "The Grand Design", "Stephen Hawking"),
-                new Book(1984, "Alice's Adventures in Wonderland & Through the Looking-Glass", "Lewis Carroll"),
-                new Book(2012, "Fahrenheit 451", "Ray Bradbury"),
-                new Book(2016, "Fantastic Beasts and Where to Find Them", "J.K. Rowling"),
+                new Book(){ year = 1950, name = "1984",  author = "George Orwell" },
+                new Book(){ year = 1998, name = "A Brief History of Time", author = "Stephen Hawking" },
             };
 
             // writting in binary
-            BinarySerialization.WriteToBinaryFile<List<Book>>("./books.bin", books);
             BinarySerialization.WriteToBinaryFile<User>("./user.bin", user);
+            BinarySerialization.WriteToBinaryFile<List<Book>>("./books.bin", books);
+
+            //writting a txt file
+            XmlSerialization.WriteToXmlFile<User>("./user.txt", user);
+            XmlSerialization.WriteToXmlFile<List<Book>>("./book.txt", books);
 
             //reading from binary
             User user2 = BinarySerialization.ReadFromBinaryFile<User>("./user.bin");
             List<Book> books2 = BinarySerialization.ReadFromBinaryFile<List<Book>>("./books.bin");
 
+            //reading from txt
+            User user3 = XmlSerialization.ReadFromXmlFile<User>("./user.txt");
+            List<Book> books3 = XmlSerialization.ReadFromXmlFile<List<Book>>("./book.txt");
+
+            Console.WriteLine("-------------------------------------------");
             Console.WriteLine("User: \n {0} {1}", user2.name, user2.surname);
 
             Console.WriteLine("Book List: ");
             foreach (var item in books2)
+            {
+                Console.WriteLine(" {0}, {1}, {2}", item.author, item.name, item.year);
+            }
+
+            Console.WriteLine("-------------------------------------------");
+            Console.WriteLine("User: \n {0} {1}", user3.name, user3.surname);
+
+            Console.WriteLine("Book List: ");
+            foreach (var item in books3)
             {
                 Console.WriteLine(" {0}, {1}, {2}", item.author, item.name, item.year);
             }
