@@ -7,7 +7,6 @@
     4.	Серіалізація з використанням BinaryFormatter або DataContractSerialzier(4б)
 */
 
-
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
